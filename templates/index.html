@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Path Drawer</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"
+    />
+    <script
+      type="text/javascript"
+      src="https://cdn.jsdelivr.net/npm/toastify-js"
+    ></script>
+    <link
+      rel="stylesheet"
+      href="{{ url_for('static', filename='css/style.css') }}"
+    />
+  </head>
+  <body data-apikey="{{ apikey }}">
+    <div id="map"></div>
+
+    <!-- Floating Control Panel -->
+    <div class="control-panel">
+      <div class="control-buttons">
+        <input type="file" id="gpx-input" accept=".gpx" style="display: none" />
+        <button class="control-btn btn-import" id="import-gpx-btn">
+          <span class="btn-icon">📂</span>
+          <span>Import GPX</span>
+        </button>
+
+        <div class="export-dropdown">
+          <button id="export-btn" class="control-btn btn-export" disabled>
+            <span class="btn-icon">💾</span>
+            <span>Export</span>
+          </button>
+          <div class="export-options">
+            <button id="export-gpx-btn" class="export-option">
+              <span class="option-icon">📎</span>
+              <span class="option-text">Download GPX</span>
+            </button>
+            <button id="export-wormhole-btn" class="export-option">
+              <span class="option-icon">🌀</span>
+              <span class="option-text">Share via Wormhole</span>
+            </button>
+          </div>
+        </div>
+
+        <button class="control-btn btn-delete" id="clear-btn">
+          <span class="btn-icon">🗑️</span>
+          <span>Delete All</span>
+        </button>
+      </div>
+      <div class="point-counter-container">
+        <span id="point-count">Click map to start drawing a path</span>
+      </div>
+    </div>
+
+    <!-- Drag and Drop Zone -->
+    <div id="dropzone" class="dropzone">
+      <div class="dropzone-content">
+        <div class="dropzone-icon">📁</div>
+        <div class="dropzone-text">Drop GPX file here</div>
+      </div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
+    <script
+      type="module"
+      src="{{ url_for('static', filename='js/main.js') }}"
+    ></script>
+  </body>
+</html>
