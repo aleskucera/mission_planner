@@ -1,7 +1,7 @@
 export class MapManager {
   constructor(mapId, config = {}) {
     const defaultConfig = {
-      center: [47.5, 13.5],
+      center: [50.07664725280831, 14.41758155822754],
       initialZoom: 8,
       minZoom: 6,
       maxZoom: 22,
@@ -93,9 +93,9 @@ export class MapManager {
       opacity: 0.8,
     }).addTo(this.map);
 
-    if (this.pathLayer.getBounds().isValid()) {
-      this.map.fitBounds(this.pathLayer.getBounds().pad(0.1));
-    }
+    // if (this.pathLayer.getBounds().isValid()) {
+    //   this.map.fitBounds(this.pathLayer.getBounds().pad(0.1));
+    // }
   }
 
   clearPath() {
