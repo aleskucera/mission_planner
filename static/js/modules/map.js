@@ -15,8 +15,8 @@ export class MapManager {
     }).setView(this.config.center, this.config.initialZoom);
 
     this.markersLayer = L.layerGroup().addTo(this.map);
+    this.lineLayer = L.layerGroup().addTo(this.map);
     this.events = new L.Evented();
-    this.pathLayer = null;
 
     this._initBaseLayers();
     this._bindMapEvents();
@@ -86,23 +86,27 @@ export class MapManager {
   }
 
   drawPath(coords) {
-    this.clearPath();
-    this.pathLayer = L.polyline(coords, {
+    const pathLayer = L.polyline(coords, {
       color: "#ff7800",
       weight: 5,
       opacity: 0.8,
-    }).addTo(this.map);
+    }).addTo(this.lineLayer);
 
+    pathLayer.on("click", (e) => {
+      this.events.fire("lineClick", {
+        polyline: e.target, 
+        latlng: e.latlng,
+      });
+      L.DomEvent.stopPropagation(e);
+      return;
+    });
     // if (this.pathLayer.getBounds().isValid()) {
     //   this.map.fitBounds(this.pathLayer.getBounds().pad(0.1));
     // }
   }
 
   clearPath() {
-    if (this.pathLayer) {
-      this.map.removeLayer(this.pathLayer);
-      this.pathLayer = null;
-    }
+    this.lineLayer.clearLayers();
   }
 
   showPopup(latlng, content) {

@@ -65,6 +65,9 @@ class PathDrawerApp {
     this.map.on("gpxLoadError", (data) =>
       this.ui.showStatus(`Error loading GPX: ${data.error}`, "error"),
     );
+    this.map.on("lineClick", (data) => 
+      this.handleLineClick(data)
+    );
   }
 
   setupDragAndDrop() {
@@ -154,8 +157,13 @@ class PathDrawerApp {
 
     // Draw path if at least 2 points
     if (this.state.points.length > 1) {
-      const coords = this.state.points.map((p) => [p.lat, p.lng]);
-      this.map.drawPath(coords);
+      this.state.points.forEach((point,index) => {
+        if (index + 1 < this.state.points.length){
+          const nextPoint = this.state.points[index + 1];
+          const coords = [[point.lat, point.lng],[nextPoint.lat, nextPoint.lng]];
+          this.map.drawPath(coords);
+        }
+      });
     }
 
     this.updateUI();
@@ -187,9 +195,15 @@ class PathDrawerApp {
 
     // Redraw path if needed
     if (this.state.points.length > 1) {
-      const coords = this.state.points.map((p) => [p.lat, p.lng]);
-      this.map.drawPath(coords);
-    }
+      this.map.clearPath();
+      this.state.points.forEach((point,index) => {
+        if (index + 1 < this.state.points.length){
+          const nextPoint = this.state.points[index + 1];
+          const coords = [[point.lat, point.lng],[nextPoint.lat, nextPoint.lng]];
+          this.map.drawPath(coords);
+        }
+      });
+   }
   }
 
   handleMapClick(latlng) {
@@ -203,6 +217,13 @@ class PathDrawerApp {
 
     this.state.points.push({ lat: latlng.lat, lng: latlng.lng });
     this.ui.showStatus("Point added.", "success", 1000);
+    this.redrawEverything();
+  }
+
+  handleLineClick({ polyline, latlng }){
+    const coords = polyline.getLatLngs();
+    const index = this.state.points.findIndex(element => element.lat === coords[0].lat && element.lng === coords[0].lng);
+    this.state.points.splice(index + 1, 0, {lat: latlng.lat, lng: latlng.lng});
     this.redrawEverything();
   }
 
