@@ -4,7 +4,7 @@
 
 ### Basics and controls
 
-![SimplePathDrawer App's UI](SimplePathDrawer.JPG)
+![SimplePathDrawer App's UI](data/images/SimplePathDrawer.jpg)
 
 This is a Simple Path Drawer application. It has been created for a real-time robot navigation on a virtually set path on a map.
 
