@@ -1,6 +1,24 @@
-# mission_planner
+# Mission Planner
 
-## Usage
+## Simple Path Drawer Application
+
+### Basics and controls
+
+![SimplePathDrawer App's UI](SimplePathDrawer.JPG)
+
+This is a Simple Path Drawer application. It has been created for a real-time robot navigation on a virtually set path on a map.
+
+Its controls do as listed:
+- Left-click on the map creates a Marker (green = start, red = end)
+- Right-click on a Marker shows context menu
+- Markers are draggable
+- Two or more Markers makes a Path represented by a line
+- Clicking on a line modifies the Path by adding a Marker in between its points
+- Import GPX button imports a Path from GPX file
+- Export button exports current Path to GPX file
+- Delete All button deletes all object on the map
+
+## Installation
 
 ### Install the dependencies
 

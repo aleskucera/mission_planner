@@ -92,7 +92,21 @@ export class MapManager {
       opacity: 0.8,
     }).addTo(this.lineLayer);
 
-    pathLayer.on("click", (e) => {
+    pathLayer.on("mouseover", (e) => 
+      e.target.setStyle({
+        color: "#00ccffb6",
+        weight: 5,
+        opacity: 0.8,
+      })
+    )
+    .on("mouseout", (e) => 
+      e.target.setStyle({
+        color: "#ff7800",
+        weight: 5,
+        opacity: 0.8,
+      })
+    )
+    .on("click", (e) => {
       this.events.fire("lineClick", {
         polyline: e.target, 
         latlng: e.latlng,
