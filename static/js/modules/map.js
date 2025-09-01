@@ -17,7 +17,14 @@ export class MapManager {
     this.markersLayer = L.layerGroup().addTo(this.map);
     this.lineLayer = L.layerGroup().addTo(this.map);
     this.events = new L.Evented();
-
+    
+    L.Control.geocoder({ //init search bar
+      defaultMarkGeocode: false
+    }).on('markgeocode', (e) => {
+      this.map.fitBounds(e.geocode.bbox); // only zoom on result
+    })
+    .addTo(this.map);
+    
     this._initBaseLayers();
     this._bindMapEvents();
   }
