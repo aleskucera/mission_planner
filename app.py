@@ -236,8 +236,9 @@ def create_app():
 
     @app.route("/")
     def index():
-        api_key = os.getenv("THUNDERFOREST_API_KEY")
-        return render_template("index.html", apikey=api_key)
+        api_key_thunderforest = os.getenv("THUNDERFOREST_API_KEY")
+        api_key_seznam = os.getenv("SEZNAM_API_KEY")
+        return render_template("index.html", apikey_thunderforest=api_key_thunderforest, apikey_seznam=api_key_seznam)
 
     return app
 

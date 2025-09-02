@@ -17,7 +17,8 @@ export class MapManager {
     this.markersLayer = L.layerGroup().addTo(this.map);
     this.lineLayer = L.layerGroup().addTo(this.map);
     this.events = new L.Evented();
-
+    
+    this._setSearchBar();
     this._initBaseLayers();
     this._bindMapEvents();
   }
@@ -175,16 +176,123 @@ export class MapManager {
     });
   }
 
+  _setSearchBar(){
+    const apiKey_seznam = document.body.dataset.apiKey_seznam || ""
+    const inputElem = document.querySelector("#autoComplete");
+    // cache - [key: query] = suggest items
+    const queryCache = {};
+    // get items by query
+    const getItems = async(query) => {
+      if (queryCache[query]) {
+        return queryCache[query];
+      }
+      
+      try {
+        // you need to use your own api key!
+        const fetchData = await fetch(`https://api.mapy.cz/v1/suggest?lang=cs&limit=5&type=regional.address&apikey=${apiKey_seznam}&query=${query}`);
+        const jsonData = await fetchData.json();
+        // map values to { value, data }
+        const items = jsonData.items.map(item => ({
+          value: item.name,
+          data: item,
+        }));
+        
+        // save to cache
+        queryCache[query] = items;
+        
+        return items;
+      } catch (exc) {
+        return [];
+      }
+    };
+
+    const autoCompleteJS = new autoComplete({
+      selector: () => inputElem,
+      placeHolder: "Enter your address...",
+      searchEngine: (query, record) => `<mark>${record}</mark>`,
+      data: {
+        keys: ["value"],
+        src: async(query) => {
+          // get items for current query
+          const items = await getItems(query);
+          
+          // cache hit? - there is a problem, because this provider needs to get items
+          // for each query and cannot handle different timeouts for different query.
+          // if previous query was completed - it's already in the cache, and some
+          // old query is completed, we test it againts current query and returns correct items.
+          if (queryCache[inputElem.value]) {
+            return queryCache[inputElem.value];
+          }
+          
+          return items;
+        },
+        cache: false,
+      },
+      resultItem: {
+        element: (item, data) => {
+          const itemData = data.value.data;
+          const desc = document.createElement("div");
+          
+          desc.style = "overflow: hidden; white-space: nowrap; text-overflow: ellipsis;";
+          desc.innerHTML = `${itemData.label}, ${itemData.location}`;
+          item.append(
+            desc,
+          );
+        },
+        highlight: true
+      },
+      resultsList: {
+        element: (list, data) => {
+          list.style.maxHeight = "max-content";
+          list.style.overflow = "hidden";
+        
+          if (!data.results.length) {
+            const message = document.createElement("div");
+            
+            message.setAttribute("class", "no_result");
+            message.style = "padding: 5px";
+            message.innerHTML = `<span>Found No Results for "${data.query}"</span>`;
+            list.prepend(message);
+          } else {
+            const logoHolder = document.createElement("div");
+            const text = document.createElement("span");
+            const img = new Image();
+            
+            logoHolder.style = "padding: 5px; display: flex; align-items: center; justify-content: end; gap: 5px; font-size: 12px;";
+            text.textContent = "Powered by";
+            img.src = "https://api.mapy.cz/img/api/logo-small.svg";
+            img.style = "width: 60px";
+            logoHolder.append(text, img);
+            list.append(logoHolder);
+          }
+        },
+        noResults: true,
+      },
+    });
+    inputElem.addEventListener("selection", event => {
+        // "event.detail" carries the autoComplete.js "feedback" object
+        // saved data from line 16 (mapping)
+        const origData = event.detail.selection.value.data;
+        const bounds = [[origData.bbox[1],origData.bbox[0]], [origData.bbox[3],origData.bbox[2]]];
+        console.log(origData.bbox);
+        this.map.setView(origData.position);
+        this.map.fitBounds(bounds);
+        // data to debug
+        console.log(origData);
+        inputElem.value = origData.name;
+    });
+  }
+
   _initBaseLayers() {
     // Check if an API key is available in a data attribute
-    const apiKey = document.body.dataset.apikey || "";
+    const apiKey_thunderforest = document.body.dataset.apikey_thunderforest || "";
 
     let baseLayers = {};
 
     // If API key is available, use Thunderforest maps
-    if (apiKey) {
+    if (apiKey_thunderforest) {
       const tileUrl = (style) =>
-        `https://{s}.tile.thunderforest.com/${style}/{z}/{x}/{y}{r}.png?apikey=${apiKey}`;
+        `https://{s}.tile.thunderforest.com/${style}/{z}/{x}/{y}{r}.png?apikey=${apiKey_thunderforest}`;
       const tileAttribution =
         "&copy; Thunderforest, &copy; OpenStreetMap contributors";
 
