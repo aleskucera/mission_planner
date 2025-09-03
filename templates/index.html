@@ -8,6 +8,11 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
     />
+    <!--Seznam Auto Complete-->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.9/dist/css/autoComplete.02.min.css">
+    <script src="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.js"></script>
+    <link href="https://unpkg.com/maplibre-gl@2.4.0/dist/maplibre-gl.css" rel="stylesheet" />
+
     <link
       rel="stylesheet"
       type="text/css"
@@ -22,8 +27,12 @@
       href="{{ url_for('static', filename='css/style.css') }}"
     />
   </head>
-  <body data-apikey="{{ apikey }}">
+  <body data-apikey_thunderforest="{{ apikey_thunderforest }}", data-apikey_seznam="{{ apikey_seznam }}">
     <div id="map"></div>
+    <!--Seznam SearchBar-->
+    <div class="autoComplete_wrapper">
+      <input id="autoComplete" type="search" dir="ltr" spellcheck="false" autocorrect="off" autocomplete="on" autocapitalize="off">
+    </div>
 
     <!-- Floating Control Panel -->
     <div class="control-panel">
@@ -55,6 +64,11 @@
           <span class="btn-icon">🗑️</span>
           <span>Delete All</span>
         </button>
+
+        <button class="control-btn btn-replan" id="replan-btn"> <!-- icon from https://cs.piliapp.com/emojis/pencil/ -->
+          <span class = "btn-icon">✏️</span>
+          <span>Replan Path</span>
+        </button>
       </div>
       <div class="point-counter-container">
         <span id="point-count">Click map to start drawing a path</span>
@@ -71,6 +85,7 @@
 
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet-gpx/1.7.0/gpx.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tarekraafat/autocomplete.js@10.2.7/dist/autoComplete.min.js"></script><!--Seznam Script-->
     <script
       type="module"
       src="{{ url_for('static', filename='js/main.js') }}"
