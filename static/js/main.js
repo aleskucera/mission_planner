@@ -44,6 +44,10 @@ class PathDrawerApp {
       .getElementById("gpx-input")
       .addEventListener("change", (e) => this.handleGpxImport(e));
 
+    document
+      .getElementById("replan-btn")
+      .addEventListener("click", () => this.replanPath());
+
     // Export dropdown
     document.getElementById("export-btn").addEventListener("click", (e) => {
       e.stopPropagation();
@@ -298,6 +302,10 @@ class PathDrawerApp {
     const gpxData = this._generateGPX();
     this._downloadFile(gpxData, "path.gpx", "application/gpx+xml");
     this.ui.showStatus("GPX file exported.", "success");
+  }
+
+  replanPath(){
+    
   }
 
   async sharePathViaWormhole() {

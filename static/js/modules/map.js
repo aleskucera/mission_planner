@@ -207,7 +207,7 @@ export class MapManager {
 
     const autoCompleteJS = new autoComplete({
       selector: () => inputElem,
-      placeHolder: "Enter your address...",
+      placeHolder: "Search..",
       searchEngine: (query, record) => `<mark>${record}</mark>`,
       data: {
         keys: ["value"],
