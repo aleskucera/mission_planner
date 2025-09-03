@@ -176,8 +176,8 @@ export class MapManager {
     });
   }
 
-  _setSearchBar(){
-    const apiKey_seznam = document.body.dataset.apiKey_seznam || ""
+  _setSearchBar(){//beg 9:10
+    const apiKey_seznam = document.body.dataset.apikey_seznam || ""
     const inputElem = document.querySelector("#autoComplete");
     // cache - [key: query] = suggest items
     const queryCache = {};
@@ -188,8 +188,7 @@ export class MapManager {
       }
       
       try {
-        // you need to use your own api key!
-        const fetchData = await fetch(`https://api.mapy.cz/v1/suggest?lang=cs&limit=5&type=regional.address&apikey=${apiKey_seznam}&query=${query}`);
+        const fetchData = await fetch(`https://api.mapy.cz/v1/suggest?lang=cs&limit=5&type=regional&type=poi&preferNear&apikey=${apiKey_seznam}&query=${query}`);//input parametrs of suggest
         const jsonData = await fetchData.json();
         // map values to { value, data }
         const items = jsonData.items.map(item => ({
@@ -215,11 +214,6 @@ export class MapManager {
         src: async(query) => {
           // get items for current query
           const items = await getItems(query);
-          
-          // cache hit? - there is a problem, because this provider needs to get items
-          // for each query and cannot handle different timeouts for different query.
-          // if previous query was completed - it's already in the cache, and some
-          // old query is completed, we test it againts current query and returns correct items.
           if (queryCache[inputElem.value]) {
             return queryCache[inputElem.value];
           }
@@ -270,15 +264,9 @@ export class MapManager {
       },
     });
     inputElem.addEventListener("selection", event => {
-        // "event.detail" carries the autoComplete.js "feedback" object
-        // saved data from line 16 (mapping)
         const origData = event.detail.selection.value.data;
         const bounds = [[origData.bbox[1],origData.bbox[0]], [origData.bbox[3],origData.bbox[2]]];
-        console.log(origData.bbox);
-        this.map.setView(origData.position);
         this.map.fitBounds(bounds);
-        // data to debug
-        console.log(origData);
         inputElem.value = origData.name;
     });
   }
