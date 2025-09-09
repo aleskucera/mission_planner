@@ -6,6 +6,9 @@ import subprocess
 import tempfile
 import threading
 import time
+import sys
+import utm
+import numpy as np
 from uuid import uuid4
 
 from dotenv import load_dotenv
@@ -15,6 +18,14 @@ from flask import jsonify
 from flask import render_template
 from flask import request
 
+project_root = os.path.abspath(os.path.dirname(__file__))
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
+from pathsolver.replan import ReplanPath, parse_args
+#from pathsolver.src.rrt_star import RRTStar
+from pathsolver.src.map_data import MapData
+from pathsolver.src.utils import ways_to_shapely
 
 class WormholeManager:
     def __init__(self):
@@ -187,7 +198,7 @@ api_bp = Blueprint("api", __name__)
 
 @api_bp.route("/create_wormhole", methods=["POST"])
 def create_wormhole():
-    gpx_data = request.json.get("gpx")
+    gpx_data = request.json.get("gpx") #pick gpx_data
     if not gpx_data:
         return jsonify({"success": False, "message": "No GPX data provided"}), 400
 
@@ -223,6 +234,50 @@ def cancel_wormhole():
     success, message = wormhole_manager_instance.cancel_transfer(transfer_id)
     return jsonify({"success": success, "message": message})
 
+@api_bp.route("/create_replan", methods = ["POST"])#10:30
+def create_replan():
+    path_data = request.json.get("points") #get coords = array of [lat, lon] points
+    args = parse_args()
+    args.simplify_path = True
+    args.visualize = False
+
+    if args.file is None:
+        map_data = MapData(path_data, coords_type="planner") #get map data
+        map_data.run_queries()
+        map_data.run_parse()
+
+    args.low = (map_data.min_x, map_data.min_y)
+    args.high = (map_data.max_x, map_data.max_y)
+    obstacles = ways_to_shapely(map_data.barriers_list)
+
+    replanner = ReplanPath(args, obstacles)
+    replanner.fill_grid(map_data)
+    new_path = []
+    utm_path = []
+    new_path.append(( np.float64(path_data[0][0]),np.float64(path_data[0][1]) )) #append start point
+  
+    for p in path_data:
+        newp = utm.from_latlon(float(p[0]), float(p[1]), map_data.zone_number, map_data.zone_letter) #convert coords to utm
+        utm_path.append(newp)
+
+    for i in range (len(utm_path)):
+        if (i + 1) < len(utm_path):
+            seg_path = np.array([[utm_path[i][0], utm_path[i][1]], [utm_path[i+1][0], utm_path[i+1][1]]]) #for each two points of path
+            res = replanner.replan_rrt(seg_path)
+            if (res is None):
+                continue #path has not been found
+            for i in range(1,len(res)-1):
+                new_path.append(utm.to_latlon(res[i][0], res[i][1], map_data.zone_number, map_data.zone_letter)) #convert point to lat lon
+
+    new_path.append(( np.float64(path_data[len(path_data)-1][0]),np.float64(path_data[len(path_data)-1][1]) )) #append end point
+    if (len(new_path) == 2): #only start and end point
+        return jsonify({"success":False, "newPath": new_path })
+    return jsonify({"success": True, "newPath": new_path})
+
+@api_bp.route("/cancel_replan", methods=["POST"])
+def cancel_replan():
+    #todo
+    pass
 
 def create_app():
     """Application factory."""

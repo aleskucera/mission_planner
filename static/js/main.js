@@ -1,4 +1,4 @@
-import { createWormhole, cancelWormhole } from "./modules/api.js";
+import { createWormhole, cancelWormhole, createReplan } from "./modules/api.js";
 import { UI } from "./modules/ui.js";
 import { MapManager } from "./modules/map.js";
 
@@ -45,8 +45,8 @@ class PathDrawerApp {
       .addEventListener("change", (e) => this.handleGpxImport(e));
 
     document
-      .getElementById("replan-btn")
-      .addEventListener("click", () => this.replanPath());
+      .getElementById('replan-btn')
+      .addEventListener('click', () => this.replanPath());
 
     // Export dropdown
     document.getElementById("export-btn").addEventListener("click", (e) => {
@@ -305,7 +305,34 @@ class PathDrawerApp {
   }
 
   replanPath(){
-    
+    if (this.state.points.length < 2){
+      this.ui.showStatus("Path must have at least 2 points to replan.", "error");
+      return;
+    }
+
+    this.setProcessingState(true);
+    const progressDialog = this.ui.showProgressDialog("Replanning path...")
+    const coords = [];
+    this.state.points.forEach(point => {
+      coords.push([point.lat, point.lng]);
+    })
+    const data = createReplan(coords); //array of coords
+    var newPath = null;
+    data.then(data => {
+      if (data.newPath.length == 2){ //only start and end
+        this.ui.showStatus("Could not found new route", "error");
+      }else{
+        newPath = data.newPath;
+        this.clearAll();
+        newPath.forEach (newPoint => {
+          this.state.points.push({ lat: newPoint[0], lng: newPoint[1]})
+        })
+        this.redrawEverything();
+        this.ui.showStatus("Replaned done", "success");
+      }
+    })
+    this.setProcessingState(false);
+    progressDialog.close();
   }
 
   async sharePathViaWormhole() {
