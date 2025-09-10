@@ -2,7 +2,7 @@ import numpy as np
 from shapely.prepared import prep
 from shapely.geometry import Point, MultiPoint, LineString
 
-from points_to_graph_points import get_point_line
+from pathsolver.src.utils import get_point_line
 
 
 # living_street, pedestrian, track, crossing can be accessed by cars

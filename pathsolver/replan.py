@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import os
-import sys
 import pickle
 import argparse
 
@@ -99,6 +98,8 @@ class ReplanPath:
         path = rrt_star.find_path()
         if path is None and self.debug:  # debug
             rrt_star.visualize()
+        elif path is None:
+            print("Path not found")
         else:
             path += self.args.low  # Convert back to original coordinates
             # path = np.hstack([path, np.zeros((path.shape[0], 1))])  # Add z-coordinate, removed temporarily
@@ -313,7 +314,9 @@ if __name__ == "__main__":
     if args.file is None:
         map_data = MapData(path_data, coords_type="array")
         map_data.run_queries()
-        map_data.run_parse()
+        ret = map_data.run_parse()
+        if ret:
+            exit(1)
     else:
         with open(
             os.path.join(os.path.dirname(__file__), "../", args.file), "rb"

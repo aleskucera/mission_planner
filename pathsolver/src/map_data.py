@@ -29,7 +29,6 @@ except ImportError:
 
 
 import os
-import sys
 import utm
 import overpy
 import argparse
@@ -48,13 +47,13 @@ except ImportError:
 
 
 from gpxpy import parse as gpxparse
-sys.path.append(os.path.dirname(__file__))
-from way import Way
+
+from pathsolver.src.way import Way
 
 
 OBSTACLE_RADIUS = 2  # meters, radius of the circle around the obstacle
-OSM_RECTANGLE_MARGIN = 100  # meters, margin around the map
-RESERVE = 50  # meters, reserve around the waypoints
+OSM_RECTANGLE_MARGIN = 50  # meters, margin around the map
+RESERVE = 25  # meters, reserve around the waypoints
 
 
 class CoordsData:
