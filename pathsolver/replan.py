@@ -12,13 +12,14 @@ from scipy.spatial import cKDTree
 from shapely.geometry import LineString
 from matplotlib.patches import Polygon as MplPolygon
 
-project_root = os.path.abspath(os.path.dirname(__file__))
-if project_root not in sys.path:
-    sys.path.append(project_root)
-
-from src.rrt_star import RRTStar
-from src.map_data import MapData, CoordsData
-from src.utils import parse_path, ways_to_shapely, create_gpx_content, utm_path_to_latlon
+from pathsolver.src.rrt_star import RRTStar
+from pathsolver.src.map_data import MapData
+from pathsolver.src.utils import (
+    parse_path,
+    ways_to_shapely,
+    create_gpx_content,
+    utm_path_to_latlon,
+)
 
 
 class ReplanPath:
@@ -27,6 +28,7 @@ class ReplanPath:
 
         self.grid = self._create_grid(args.low, args.high, args.cell_size)
         self.obstacles = obstacles
+        self.debug = False
 
     def replan_rrt(self, path):
         new_path = []
@@ -95,11 +97,11 @@ class ReplanPath:
         self.obstacles = obstacles
         rrt_star = RRTStar(start, goal, obst, grid, simplify=self.args.simplify_path)
         path = rrt_star.find_path()
-        #if path is None:  # debug
-        #    rrt_star.visualize()
-        #else:
-        if (path is not None): path += self.args.low  # Convert back to original coordinates
-            #path = np.hstack([path, np.zeros((path.shape[0], 1))])  # Add z-coordinate, removed temporarily
+        if path is None and self.debug:  # debug
+            rrt_star.visualize()
+        else:
+            path += self.args.low  # Convert back to original coordinates
+            # path = np.hstack([path, np.zeros((path.shape[0], 1))])  # Add z-coordinate, removed temporarily
 
         return path
 
