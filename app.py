@@ -234,7 +234,7 @@ def cancel_wormhole():
     success, message = wormhole_manager_instance.cancel_transfer(transfer_id)
     return jsonify({"success": success, "message": message})
 
-@api_bp.route("/create_replan", methods = ["POST"])#10:30
+@api_bp.route("/create_replan", methods = ["POST"])
 def create_replan():
     path_data = request.json.get("points") #get coords = array of [lat, lon] points
     args = parse_args()
@@ -255,7 +255,9 @@ def create_replan():
     new_path = []
     utm_path = []
     new_path.append(( np.float64(path_data[0][0]),np.float64(path_data[0][1]) )) #append start point
-  
+    try_again = 0
+    changed = False
+
     for p in path_data:
         newp = utm.from_latlon(float(p[0]), float(p[1]), map_data.zone_number, map_data.zone_letter) #convert coords to utm
         utm_path.append(newp)
@@ -264,20 +266,27 @@ def create_replan():
         if (i + 1) < len(utm_path):
             seg_path = np.array([[utm_path[i][0], utm_path[i][1]], [utm_path[i+1][0], utm_path[i+1][1]]]) #for each two points of path
             res = replanner.replan_rrt(seg_path)
-            if (res is None):
-                continue #path has not been found
+            while (res is None and try_again <= 3):  #path has not been found
+                print("Info: trying to find path again in between", seg_path, "points")
+                try_again += 1
+                res = replanner.replan_rrt(seg_path)
+            if (try_again >= 3):
+                print("Path not found")
+                try_again = 0
+                continue #retrieve path founding error do not append points
+            
             for i in range(1,len(res)-1):
+                changed = True
                 new_path.append(utm.to_latlon(res[i][0], res[i][1], map_data.zone_number, map_data.zone_letter)) #convert point to lat lon
 
     new_path.append(( np.float64(path_data[len(path_data)-1][0]),np.float64(path_data[len(path_data)-1][1]) )) #append end point
-    if (len(new_path) == 2): #only start and end point
-        return jsonify({"success":False, "newPath": new_path })
-    return jsonify({"success": True, "newPath": new_path})
+    if (changed): #path changed
+        return jsonify ({"retrieveNum": 0, "newPath": new_path})
+    elif (not changed and len(path_data) == len(new_path)):
+        return jsonify({"retrieveNum": -1, "newPath": new_path}) #path the same, special condition
+    return jsonify ({"retrieveNum": 1, "newPath": None}) #path not found
+    
 
-@api_bp.route("/cancel_replan", methods=["POST"])
-def cancel_replan():
-    #todo
-    pass
 
 def create_app():
     """Application factory."""

@@ -50,7 +50,3 @@ export async function createReplan(points){
   }
   return response.json();
 }
-
-export async function cancelReplan(points){
-  //todo
-}

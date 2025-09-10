@@ -310,8 +310,9 @@ class PathDrawerApp {
       return;
     }
 
-    this.setProcessingState(true);
-    const progressDialog = this.ui.showProgressDialog("Replanning path...")
+    this.state.isProcessing = true;
+    this.ui.setProcessingState(this.state.isProcessing);
+    const progressDialog = this.ui.showProgressDialog("Replanning Path...");
     const coords = [];
     this.state.points.forEach(point => {
       coords.push([point.lat, point.lng]);
@@ -319,8 +320,11 @@ class PathDrawerApp {
     const data = createReplan(coords); //array of coords
     var newPath = null;
     data.then(data => {
-      if (data.newPath.length == 2){ //only start and end
-        this.ui.showStatus("Could not found new route", "error");
+      this.state.isProcessing = false; //to clear correctly
+      if (data.retrieveNum == -1){
+        this.ui.showStatus("No need to replan", "success");
+      }else if (data.retrieveNum == 1){
+        this.ui.showStatus("Could not found new path", "error");
       }else{
         newPath = data.newPath;
         this.clearAll();
@@ -330,9 +334,9 @@ class PathDrawerApp {
         this.redrawEverything();
         this.ui.showStatus("Replaned done", "success");
       }
-    })
-    this.setProcessingState(false);
-    progressDialog.close();
+      this.ui.setProcessingState(this.state.isProcessing);
+      progressDialog.close();
+    });
   }
 
   async sharePathViaWormhole() {
@@ -415,3 +419,4 @@ class PathDrawerApp {
 document.addEventListener("DOMContentLoaded", () => {
   new PathDrawerApp();
 });
+//todo counter na replan (seg path), retrieve number na new_path_seg, 10:45
