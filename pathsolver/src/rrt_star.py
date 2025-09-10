@@ -1,10 +1,13 @@
 import random
 
+import matplotlib
 import numpy as np
 import matplotlib.pyplot as plt
 from typing import List, Tuple, Optional
 from shapely.geometry import Point, LineString
 from matplotlib.patches import Polygon as MplPolygon
+
+matplotlib.use("Agg")
 
 
 class RRTStar:
@@ -273,8 +276,8 @@ class RRTStar:
         """Visualize the grid, obstacles, RRT* tree, and path using Matplotlib."""
         _, ax = plt.subplots()
 
-        # Plot grid as a heatmap (0: white, 1: gray)
-        grid_display = np.flipud(self.grid)  # Flip for correct orientation
+        # Plot grid as a heatmap (0: white, 1: black)
+        grid_display = self.grid
         ax.imshow(
             grid_display,
             cmap="Greys",
@@ -319,7 +322,8 @@ class RRTStar:
         ax.set_title("RRT* Path Planning")
         ax.legend()
         ax.grid(True)
-        plt.show()
+        # plt.show()
+        plt.savefig("rrt_star_path.png")
 
 
 # Example usage

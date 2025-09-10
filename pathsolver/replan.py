@@ -32,7 +32,7 @@ class ReplanPath:
     def replan_rrt(self, path):
         new_path = []
         for i in range(len(path) - 1):
-            new_path.append(path[i])
+            new_path.append(path[i][:2])
             start = path[i]
             goal = path[i + 1]
             path_seg = LineString([start[:2], goal[:2]])
@@ -45,7 +45,7 @@ class ReplanPath:
                     return None
                 new_path.extend(way[1:-1])
 
-        new_path.append(path[-1])
+        new_path.append(path[-1][:2])
         return np.array(new_path)
 
     def _reshape_grid(self):
@@ -93,8 +93,14 @@ class ReplanPath:
     def _rrt(self, start, goal, obstacles):
         grid = self._reshape_grid()
         obst = self._convert_obstacles(obstacles)
-        self.obstacles = obstacles
-        rrt_star = RRTStar(start, goal, obst, grid, simplify=self.args.simplify_path)
+        rrt_star = RRTStar(
+            start,
+            goal,
+            obst,
+            grid,
+            grid_scale=self.args.cell_size,
+            simplify=self.args.simplify_path,
+        )
         path = rrt_star.find_path()
         if path is None and self.debug:  # debug
             rrt_star.visualize()
@@ -273,9 +279,9 @@ class ReplanPath:
             ax.plot(path[:, 0], path[:, 1], "m-", linewidth=2, label="Path")
             ax.scatter(path[:, 0], path[:, 1], c="m", s=20, label="Path Points")
 
-        # Plot start and goal
-        ax.plot(path[0, 0], path[0, 1], "go", label="Start")
-        ax.plot(path[-1, 0], path[-1, 1], "bo", label="Goal")
+            # Plot start and goal
+            ax.plot(path[0, 0], path[0, 1], "go", label="Start")
+            ax.plot(path[-1, 0], path[-1, 1], "bo", label="Goal")
 
         # Set plot properties
         ax.set_xlabel("Northing [m]")
