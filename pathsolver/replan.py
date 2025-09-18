@@ -27,7 +27,12 @@ class ReplanPath:
         self.args = args
 
         self.grid = self._create_grid(args.low, args.high, args.cell_size)
-        self.obstacles = obstacles
+        if args.inflate_obstacles:
+            self.obstacles = [
+                obstacle.buffer(args.inflate_obstacles) for obstacle in obstacles
+            ]
+        else:
+            self.obstacles = obstacles
         self.debug = False
 
     def replan_rrt(self, path):
@@ -306,7 +311,7 @@ class ReplanPath:
         ax.set_xlim(self.args.low[0], self.args.high[0])
         ax.set_ylim(self.args.low[1], self.args.high[1])
 
-        plt.show()
+        plt.savefig("replan.png")
 
 
 def parse_args():
@@ -316,6 +321,12 @@ def parse_args():
     parser.add_argument("--simplify_path", action="store_true", help="Simplify path")
     parser.add_argument(
         "--cell_size", type=float, default=0.25, help="Cell size for the grid"
+    )
+    parser.add_argument(
+        "--inflate_obstacles",
+        type=float,
+        default=0.25,
+        help="Inflate obstacles by this amount",
     )
     parser.add_argument("--save", type=str, default=None, help="Save path to file")
     parser.add_argument("--visualize", action="store_true", help="Visualize the path")
