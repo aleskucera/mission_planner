@@ -90,7 +90,7 @@ class MapData:
     def __init__(
         self, coords, coords_type="file", current_robot_position=None, flip=False
     ):
-        self.api = overpy.Overpass(url="https://overpass.kumi.systems/api/interpreter")
+        self.api = overpy.Overpass(url="https://overpass-api.de/api/interpreter")
 
         self.coords_type = coords_type
         if coords_type == "file":
@@ -727,14 +727,14 @@ if __name__ == "__main__":
 
     if args.d:
         map_data = MapData(
-            os.path.join(os.path.dirname(__file__), "../data", args.f),
+            os.path.join(os.path.dirname(__file__), "../../data", args.f),
             coords_type="file",
         )
         map_data.run_queries()
     else:
         with open(
             os.path.join(
-                os.path.dirname(__file__), "../data", args.f[:-4] + ".mapdata"
+                os.path.dirname(__file__), "../../data", args.f[:-4] + ".mapdata"
             ),
             "rb",
         ) as fh:

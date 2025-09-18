@@ -8,6 +8,7 @@ import numpy as np
 import shapely as sh
 import matplotlib.pyplot as plt
 from scipy.spatial import cKDTree
+from joblib import Parallel, delayed
 from shapely.geometry import LineString
 from matplotlib.patches import Polygon as MplPolygon
 
@@ -30,20 +31,31 @@ class ReplanPath:
         self.debug = False
 
     def replan_rrt(self, path):
-        new_path = []
-        for i in range(len(path) - 1):
-            new_path.append(path[i][:2])
+        def process_segment(i, path, obstacles, args):
             start = path[i]
             goal = path[i + 1]
+            segment_path = [start[:2]]
             path_seg = LineString([start[:2], goal[:2]])
-            if self._colides(path_seg, self.obstacles):
-                way = self._rrt(
-                    start[:2] - self.args.low, goal[:2] - self.args.low, self.obstacles
-                )
+            if self._colides(path_seg, obstacles):
+                way = self._rrt(start[:2] - args.low, goal[:2] - args.low, obstacles)
                 if way is None:
-                    print("RRT* failed to find a path.")
-                    return None
-                new_path.extend(way[1:-1])
+                    return None, i
+                segment_path.extend(way[1:-1])
+            return segment_path, i
+
+        new_path = []
+        results = Parallel(n_jobs=-1)(
+            delayed(process_segment)(i, path, self.obstacles, self.args)
+            for i in range(len(path) - 1)
+        )
+
+        # Sort results by index to maintain path order
+        results.sort(key=lambda x: x[1])
+        for segment_path, _ in results:
+            if segment_path is None:
+                print("RRT* failed to find a path.")
+                return None
+            new_path.extend(segment_path)
 
         new_path.append(path[-1][:2])
         return np.array(new_path)
