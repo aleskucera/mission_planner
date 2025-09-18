@@ -17,6 +17,33 @@ body {
   z-index: 0;
 }
 
+.autoComplete_wrapper {
+  position: absolute !important;
+  top: 6px !important;
+  right: 65px !important;
+  width: 70px !important;
+  transition: width 0.4s ease !important;
+  border-radius: 4px !important;
+  background-color: rgb(255, 255, 255) !important; /* Optional background */
+}
+
+/* Expand wrapper when input is focused */
+.autoComplete_wrapper:focus-within,
+.autoComplete_wrapper:hover {
+  width: 220px !important;  /* Expand to desired size */
+}
+
+.autoComplete_wrapper input {
+  width: 100% !important;
+  padding: 6px 8px !important;
+  border: none !important;
+  outline: none !important;
+  background: transparent !important;
+  font-size: 14px !important;
+}
+
+
+
 /* Floating Control Panel */
 .control-panel {
   position: absolute;
@@ -95,6 +122,15 @@ body {
   background: linear-gradient(135deg, #c0392b, #e74c3c);
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(231, 76, 60, 0.3);
+}
+
+.btn-replan{
+  background: linear-gradient(135deg, #5f5d5d9d, #696464);
+}
+.btn-replan:hover{
+  background: linear-gradient(135deg, #858080, #746d6d);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(134, 132, 132, 0.774);
 }
 
 .btn-icon {

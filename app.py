@@ -6,6 +6,9 @@ import subprocess
 import tempfile
 import threading
 import time
+import sys
+import utm
+import numpy as np
 from uuid import uuid4
 
 from dotenv import load_dotenv
@@ -14,6 +17,14 @@ from flask import Flask
 from flask import jsonify
 from flask import render_template
 from flask import request
+
+project_root = os.path.abspath(os.path.dirname(__file__))
+if project_root not in sys.path:
+    sys.path.append(project_root)
+
+from pathsolver.replan import ReplanPath, parse_args
+from pathsolver.src.map_data import MapData
+from pathsolver.src.utils import ways_to_shapely
 
 
 class WormholeManager:
@@ -187,7 +198,7 @@ api_bp = Blueprint("api", __name__)
 
 @api_bp.route("/create_wormhole", methods=["POST"])
 def create_wormhole():
-    gpx_data = request.json.get("gpx")
+    gpx_data = request.json.get("gpx")  # pick gpx_data
     if not gpx_data:
         return jsonify({"success": False, "message": "No GPX data provided"}), 400
 
@@ -224,6 +235,57 @@ def cancel_wormhole():
     return jsonify({"success": success, "message": message})
 
 
+@api_bp.route("/create_replan", methods=["POST"])
+def create_replan():
+    path_data = request.json.get("points")  # get coords = array of [lat, lon] points
+    args = parse_args()
+    args.simplify_path = True
+    args.visualize = False
+
+    if args.file is None:
+        map_data = MapData(path_data, coords_type="planner")  # get map data
+        map_data.run_queries()
+        map_data.run_parse()
+
+    args.low = (map_data.min_x, map_data.min_y)
+    args.high = (map_data.max_x, map_data.max_y)
+    obstacles = ways_to_shapely(map_data.barriers_list)
+
+    replanner = ReplanPath(args, obstacles)
+    replanner.fill_grid(map_data)
+
+    utm_path = np.array(
+        list(
+            utm.from_latlon(
+                float(p[0]), float(p[1]), map_data.zone_number, map_data.zone_letter
+            )[:2]
+            for p in path_data
+        ),
+        dtype=np.float64,
+    )  # convert coords to utm
+
+    res = replanner.replan_rrt(utm_path)
+    changed = False
+    new_path = [path_data[0]]  # append start point
+
+    for i in range(1, len(res) - 1):
+        changed = True
+        new_path.append(
+            utm.to_latlon(
+                res[i][0], res[i][1], map_data.zone_number, map_data.zone_letter
+            )
+        )  # convert point to lat lon
+
+    new_path.append(path_data[-1])  # append end point
+    if changed:  # path changed
+        return jsonify({"retrieveNum": 0, "newPath": new_path})
+    elif not changed and len(path_data) == len(new_path):
+        return jsonify(
+            {"retrieveNum": -1, "newPath": new_path}
+        )  # path the same, special condition
+    return jsonify({"retrieveNum": 1, "newPath": None})  # path not found
+
+
 def create_app():
     """Application factory."""
     app = Flask(__name__, static_folder="static", template_folder="templates")
@@ -236,8 +298,13 @@ def create_app():
 
     @app.route("/")
     def index():
-        api_key = os.getenv("THUNDERFOREST_API_KEY")
-        return render_template("index.html", apikey=api_key)
+        api_key_thunderforest = os.getenv("THUNDERFOREST_API_KEY")
+        api_key_seznam = os.getenv("SEZNAM_API_KEY")
+        return render_template(
+            "index.html",
+            apikey_thunderforest=api_key_thunderforest,
+            apikey_seznam=api_key_seznam,
+        )
 
     return app
 
@@ -246,4 +313,4 @@ load_dotenv()
 app = create_app()
 
 if __name__ == "__main__":
-    app.run(debug=True, use_reloader=False)
+    app.run(debug=True, use_reloader=False, port=5000)

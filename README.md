@@ -17,6 +17,8 @@ Its controls do as listed:
 - Import GPX button imports a Path from GPX file
 - Export button exports current Path to GPX file
 - Delete All button deletes all object on the map
+- User can use expandable Search bar with autocomplete to find its desired place
+- Replan button may find a new way to avoid obstacles 
 
 ## Installation
 

@@ -1,4 +1,4 @@
-import { createWormhole, cancelWormhole } from "./modules/api.js";
+import { createWormhole, cancelWormhole, createReplan } from "./modules/api.js";
 import { UI } from "./modules/ui.js";
 import { MapManager } from "./modules/map.js";
 
@@ -43,6 +43,10 @@ class PathDrawerApp {
     document
       .getElementById("gpx-input")
       .addEventListener("change", (e) => this.handleGpxImport(e));
+
+    document
+      .getElementById('replan-btn')
+      .addEventListener('click', () => this.replanPath());
 
     // Export dropdown
     document.getElementById("export-btn").addEventListener("click", (e) => {
@@ -300,6 +304,41 @@ class PathDrawerApp {
     this.ui.showStatus("GPX file exported.", "success");
   }
 
+  replanPath(){
+    if (this.state.points.length < 2){
+      this.ui.showStatus("Path must have at least 2 points to replan.", "error");
+      return;
+    }
+
+    this.state.isProcessing = true;
+    this.ui.setProcessingState(this.state.isProcessing);
+    const progressDialog = this.ui.showProgressDialog("Replanning Path...");
+    const coords = [];
+    this.state.points.forEach(point => {
+      coords.push([point.lat, point.lng]);
+    })
+    const data = createReplan(coords); //array of coords
+    var newPath = null;
+    data.then(data => {
+      this.state.isProcessing = false; //to clear correctly
+      if (data.retrieveNum == -1){
+        this.ui.showStatus("No need to replan", "success");
+      }else if (data.retrieveNum == 1){
+        this.ui.showStatus("Could not found new path", "error");
+      }else{
+        newPath = data.newPath;
+        this.clearAll();
+        newPath.forEach (newPoint => {
+          this.state.points.push({ lat: newPoint[0], lng: newPoint[1]})
+        })
+        this.redrawEverything();
+        this.ui.showStatus("Replaned done", "success");
+      }
+      this.ui.setProcessingState(this.state.isProcessing);
+      progressDialog.close();
+    });
+  }
+
   async sharePathViaWormhole() {
     if (this.state.points.length < 2) {
       this.ui.showStatus("Path must have at least 2 points to share.", "error");
@@ -380,3 +419,4 @@ class PathDrawerApp {
 document.addEventListener("DOMContentLoaded", () => {
   new PathDrawerApp();
 });
+//todo counter na replan (seg path), retrieve number na new_path_seg, 10:45
